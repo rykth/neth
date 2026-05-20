@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package neth;
+
+option go_package = "github.com/rykth/neth/nethpb";
+
+// LightHouseMessage is the top-level envelope for all lighthouse traffic.
+// It is serialised and placed after the 16-byte neth header (TypeLightHouse).
+// The oneof ensures exactly one sub-message is present per packet.
+
+message LightHouseMessage {
+    oneof body {
+        HostQuery                query          = 1;
+        HostQueryReply           query_reply    = 2;
+        HostUpdateNotification   update         = 3;
+        WhoAmI                   who_am_i       = 4;
+        WhoAmIReply              who_am_i_reply = 5;
+        HostPunchNotification    punch          = 6;
+    }
+}
+
+// HostQuery asks a lighthouse for the known real addresses of a VPN peer.
+message HostQuery {
+    string vpn_ip = 1; // e.g. "10.0.0.2"
+}
+
+// HostQueryReply carries the real UDP addresses known for a VPN peer.
+// addrs may be empty if the lighthouse has no record of the peer.
+message HostQueryReply {
+    string          vpn_ip = 1;
+    repeated IpPort addrs  = 2;
+}
+
+// HostUpdateNotification is sent by a node to lighthouses to advertise its
+// current real UDP addresses. Sent once at startup and periodically thereafter.
+message HostUpdateNotification {
+    repeated IpPort addrs = 1;
+}
+
+// WhoAmI asks the lighthouse to reflect the sender's real UDP address back.
+// Used to discover the sender's external IP/port behind NAT.
+message WhoAmI {}
+
+// WhoAmIReply carries the sender's observed (external) address.
+message WhoAmIReply {
+    IpPort addr = 1;
+}
+
+// HostPunchNotification is sent by a lighthouse to a node, instructing it to
+// send UDP packets to the listed addresses in order to punch a NAT hole.
+message HostPunchNotification {
+    string          vpn_ip = 1; // VPN IP of the peer to punch toward
+    repeated IpPort addrs  = 2; // real addresses to punch
+}
+
+// IpPort is a UDP endpoint (IPv4 or IPv6 address + port).
+message IpPort {
+    string ip   = 1; // dotted-decimal IPv4 or colon-hex IPv6
+    uint32 port = 2; // 1–65535
+}
+
+// HandshakeMessage is the payload placed after the 16-byte neth header when
+// Type == TypeHandshake. It carries the Noise handshake message together with
+// an outer certificate payload and an HMAC for pre-authentication.
+
+// HandshakeDetails is serialised separately, signed with HMAC, and carried
+// inside HandshakeMessage.details. It binds the Noise session to the neth
+// certificate identity and provides a replay anchor via the timestamp.
+message HandshakeDetails {
+    bytes  cert              = 1; // PEM-encoded neth certificate of the sender
+    uint32 initiator_index   = 2; // connection index chosen by the initiator
+    uint32 responder_index   = 3; // connection index chosen by the responder (stage 1 only)
+    uint64 time              = 4; // Unix timestamp (nanoseconds) - limits replay window
+}
+
+// HandshakeMessage is the complete handshake packet body.
+//
+//   details       — serialised HandshakeDetails (plaintext, covered by hmac)
+//   noise_payload — the raw Noise handshake message bytes produced by flynn/noise
+//   hmac          — HMAC-SHA256(key=sender_cert_fingerprint, data=details||noise_payload)
+//
+// The HMAC lets the receiver cheaply authenticate the sender's certificate
+// before performing the more expensive Noise ReadMessage operation.
+message HandshakeMessage {
+    bytes details       = 1;
+    bytes noise_payload = 2;
+    bytes hmac          = 3;
+}
