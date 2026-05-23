@@ -1,0 +1,36 @@
+[Unit]
+Description=neth overlay network daemon
+Documentation=https://github.com/rykth/neth
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/nethd -config /etc/neth/config.yaml
+Restart=on-failure
+RestartSec=5s
+
+# Drop all capabilities except what is needed to manage network interfaces.
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+
+# Run as an unprivileged user; the ambient capabilities above allow the
+# process to open TUN devices and send raw packets without being root.
+User=neth
+Group=neth
+DynamicUser=no
+
+# Harden the service.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/neth
+ReadOnlyPaths=/etc/neth
+
+# Reduce the kernel attack surface.
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

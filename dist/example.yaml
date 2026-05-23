@@ -1,0 +1,117 @@
+# PKI
+# All three paths are required. Generate with neth-cert:
+#
+#   neth-cert ca   --name my-ca --duration 8760h --out-dir /etc/neth
+#   neth-cert sign --ca-crt /etc/neth/ca.crt --ca-key /etc/neth/ca.key \
+#                  --name node-a --ip 10.0.0.1/24 --groups servers \
+#                  --duration 8760h --out-dir /etc/neth
+#
+pki:
+  # Root CA certificate. Used to verify all peer certificates on connect.
+  ca: /etc/neth/ca.crt
+
+  # This node's signed certificate. Sent to peers during the Noise handshake.
+  cert: /etc/neth/node.crt
+
+  # This node's Curve25519 private key. Must match the public key in cert.
+  key: /etc/neth/node.key
+
+# UDP listener 
+listen:
+  # Address to bind the UDP socket to.
+  # "0.0.0.0" listens on all interfaces. Pin to a specific IP if needed.
+  host: 0.0.0.0
+
+  # UDP port. Must be reachable from peers (open in any upstream firewall).
+  port: 4242
+
+# TUN interface 
+tun:
+  # Linux network interface name created by neth.
+  dev: neth0
+
+  # MTU in bytes. Default 1300 leaves room for the neth header (16 B),
+  # Noise AEAD tag (16 B), and UDP/IP overhead to avoid fragmentation.
+  mtu: 1300
+
+# Lighthouse peer discovery
+lighthouse:
+  # Set to true only on dedicated lighthouse nodes.
+  # A lighthouse stores the physical addresses of all peers and answers
+  # HostQuery requests from regular nodes.
+  am_lighthouse: false
+
+  # How often (in seconds) this node re-advertises its physical address
+  # to the lighthouses. Decrease if nodes change IP frequently.
+  interval: 60
+
+  # VPN IPs of lighthouse nodes. Regular nodes send HostQuery messages here
+  # when they need to reach a peer whose physical address is unknown.
+  hosts:
+    - "10.0.0.1"
+
+# Static host map 
+# Pre-populate the physical addresses of specific VPN IPs.
+# Required at minimum for the lighthouse nodes listed above so the daemon
+# can reach them before peer discovery is bootstrapped.
+#
+# Format: "<vpn_ip>": ["<host>:<port>", ...]
+# Multiple physical addresses are supported (e.g. multiple ISPs or ports).
+static_host_map:
+  "10.0.0.1": ["203.0.113.1:4242"]
+
+# UDP hole-punching
+punchy:
+  # Send zero-byte UDP datagrams to peer addresses before a handshake to open
+  # outbound NAT mappings. Recommended for nodes behind NAT.
+  punch: true
+
+  # Reply to any unrecognised incoming UDP datagram with a zero-byte packet,
+  # keeping the remote side's NAT mapping alive. Pair with punch: true.
+  respond: true
+
+# Firewall
+# Rules are evaluated in order; the first match wins.
+# Both inbound and outbound default to deny-all if no rules are listed.
+#
+# Rule fields:
+#   port:  "any" or a decimal port number 0–65535
+#   proto: "any", "tcp", "udp", or "icmp"
+#   group: group name from the peer certificate, or "any" / "" to match all
+#   cidr:  CIDR range, or "any" / "" to match all source/destination IPs
+#
+firewall:
+  inbound:
+    # Allow ICMP from anywhere (ping reachability checks).
+    - port: any
+      proto: icmp
+      cidr: "0.0.0.0/0"
+
+    # Allow all traffic from nodes in the "trusted" group.
+    - port: any
+      proto: any
+      group: trusted
+
+    # Allow SSH from the ops team only.
+    - port: "22"
+      proto: tcp
+      group: ops
+
+    # Allow HTTPS from any node in the overlay.
+    - port: "443"
+      proto: tcp
+      cidr: "10.0.0.0/8"
+
+  outbound:
+    # Allow all outbound traffic. Tighten as needed.
+    - port: any
+      proto: any
+      cidr: "0.0.0.0/0"
+
+# Logging
+logging:
+  # Log level: "debug", "info", "warn", "error".
+  level: info
+
+  # Output format: "text" (human-readable) or "json" (structured, for log aggregators).
+  format: text

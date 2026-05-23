@@ -1,0 +1,18 @@
+# compiled binaries
+bin/
+
+# test output
+*.test
+*.out
+coverage.html
+
+# editor / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# secrets — never commit real certs or keys
+*.key
+!dist/*.key.example
