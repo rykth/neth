@@ -523,7 +523,7 @@ type HandshakeDetails struct {
 	Cert           []byte `protobuf:"bytes,1,opt,name=cert,proto3" json:"cert,omitempty"`                                            // PEM-encoded neth certificate of the sender
 	InitiatorIndex uint32 `protobuf:"varint,2,opt,name=initiator_index,json=initiatorIndex,proto3" json:"initiator_index,omitempty"` // connection index chosen by the initiator
 	ResponderIndex uint32 `protobuf:"varint,3,opt,name=responder_index,json=responderIndex,proto3" json:"responder_index,omitempty"` // connection index chosen by the responder (stage 1 only)
-	Time           uint64 `protobuf:"varint,4,opt,name=time,proto3" json:"time,omitempty"`                                           // Unix timestamp (nanoseconds) — limits replay window
+	Time           uint64 `protobuf:"varint,4,opt,name=time,proto3" json:"time,omitempty"`                                           // Unix timestamp (nanoseconds) - limits replay window
 }
 
 func (x *HandshakeDetails) Reset() {
