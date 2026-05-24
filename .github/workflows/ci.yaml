@@ -76,10 +76,10 @@ jobs:
       - name: Install protoc
         uses: arduino/setup-protoc@v3
         with:
-          version: "27.x"
+          version: "25.4"
 
       - name: Install protoc-gen-go
-        run: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+        run: go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
 
       - name: Regenerate protobuf
         run: |
