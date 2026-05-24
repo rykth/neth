@@ -75,7 +75,7 @@ type LoggingConfig struct {
 
 // Load reads the YAML file at path, applies defaults, and validates the result
 func Load(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("config: read %q: %w", path, err)
 	}

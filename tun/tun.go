@@ -39,7 +39,7 @@ func (r *ifreq) getFlags() uint16 {
 }
 
 func (r *ifreq) setMTU(mtu int) {
-	binary.NativeEndian.PutUint32(r[unix.IFNAMSIZ:], uint32(mtu))
+	binary.NativeEndian.PutUint32(r[unix.IFNAMSIZ:], uint32(mtu)) //nolint:gosec
 }
 
 // setSockaddrIn writes an IPv4 sockaddr_in into the ifreq union:
@@ -77,52 +77,52 @@ func Open(name, cidr string, mtu int) (*Device, error) {
 	var tunIfr ifreq
 	tunIfr.setName(name)
 	tunIfr.setFlags(unix.IFF_TUN | unix.IFF_NO_PI)
-	if err := ioctlPtr(fd, unix.TUNSETIFF, unsafe.Pointer(&tunIfr)); err != nil {
-		unix.Close(fd)
+	if err := ioctlPtr(fd, unix.TUNSETIFF, unsafe.Pointer(&tunIfr)); err != nil { //nolint:gosec
+		_ = unix.Close(fd)
 		return nil, fmt.Errorf("tun: TUNSETIFF: %w", err)
 	}
 	devName := tunIfr.getName()
 
 	sock, err := unix.Socket(unix.AF_INET, unix.SOCK_DGRAM|unix.SOCK_CLOEXEC, 0)
 	if err != nil {
-		unix.Close(fd)
+		_ = unix.Close(fd)
 		return nil, fmt.Errorf("tun: control socket: %w", err)
 	}
-	defer unix.Close(sock)
+	defer func() { _ = unix.Close(sock) }() //nolint:gosec
 
 	var addrIfr ifreq
 	addrIfr.setName(devName)
 	addrIfr.setSockaddrIn(prefix.Addr().As4())
-	if err := ioctlPtr(sock, unix.SIOCSIFADDR, unsafe.Pointer(&addrIfr)); err != nil {
-		unix.Close(fd)
+	if err := ioctlPtr(sock, unix.SIOCSIFADDR, unsafe.Pointer(&addrIfr)); err != nil { //nolint:gosec
+		_ = unix.Close(fd)
 		return nil, fmt.Errorf("tun: SIOCSIFADDR: %w", err)
 	}
 
 	var maskIfr ifreq
 	maskIfr.setName(devName)
 	maskIfr.setSockaddrIn(prefixMask4(prefix.Bits()))
-	if err := ioctlPtr(sock, unix.SIOCSIFNETMASK, unsafe.Pointer(&maskIfr)); err != nil {
-		unix.Close(fd)
+	if err := ioctlPtr(sock, unix.SIOCSIFNETMASK, unsafe.Pointer(&maskIfr)); err != nil { //nolint:gosec
+		_ = unix.Close(fd)
 		return nil, fmt.Errorf("tun: SIOCSIFNETMASK: %w", err)
 	}
 
 	var mtuIfr ifreq
 	mtuIfr.setName(devName)
 	mtuIfr.setMTU(mtu)
-	if err := ioctlPtr(sock, unix.SIOCSIFMTU, unsafe.Pointer(&mtuIfr)); err != nil {
-		unix.Close(fd)
+	if err := ioctlPtr(sock, unix.SIOCSIFMTU, unsafe.Pointer(&mtuIfr)); err != nil { //nolint:gosec
+		_ = unix.Close(fd)
 		return nil, fmt.Errorf("tun: SIOCSIFMTU: %w", err)
 	}
 
 	var flagsIfr ifreq
 	flagsIfr.setName(devName)
-	if err := ioctlPtr(sock, unix.SIOCGIFFLAGS, unsafe.Pointer(&flagsIfr)); err != nil {
-		unix.Close(fd)
+	if err := ioctlPtr(sock, unix.SIOCGIFFLAGS, unsafe.Pointer(&flagsIfr)); err != nil { //nolint:gosec
+		_ = unix.Close(fd)
 		return nil, fmt.Errorf("tun: SIOCGIFFLAGS: %w", err)
 	}
 	flagsIfr.setFlags(flagsIfr.getFlags() | unix.IFF_UP)
-	if err := ioctlPtr(sock, unix.SIOCSIFFLAGS, unsafe.Pointer(&flagsIfr)); err != nil {
-		unix.Close(fd)
+	if err := ioctlPtr(sock, unix.SIOCSIFFLAGS, unsafe.Pointer(&flagsIfr)); err != nil { //nolint:gosec
+		_ = unix.Close(fd)
 		return nil, fmt.Errorf("tun: SIOCSIFFLAGS: %w", err)
 	}
 

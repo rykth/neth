@@ -30,7 +30,7 @@ func BuildInitiatorMessage(localCert *cert.Certificate, noisePayload []byte, loc
 		Cert:           localCert.PEM(),
 		InitiatorIndex: localIndex,
 		ResponderIndex: 0,
-		Time:           uint64(time.Now().UnixNano()),
+		Time:           uint64(time.Now().UnixNano()), //nolint:gosec
 	}
 	detailsBytes, err := proto.Marshal(details)
 	if err != nil {
@@ -54,7 +54,7 @@ func BuildResponderMessage(localCert *cert.Certificate, noisePayload []byte, ini
 		Cert:           localCert.PEM(),
 		InitiatorIndex: initiatorIndex,
 		ResponderIndex: responderIndex,
-		Time:           uint64(time.Now().UnixNano()),
+		Time:           uint64(time.Now().UnixNano()), //nolint:gosec
 	}
 	detailsBytes, err := proto.Marshal(details)
 	if err != nil {

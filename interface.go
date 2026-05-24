@@ -68,14 +68,14 @@ func NewInterface(cfg *config.Config) (*Interface, error) {
 
 	tunDev, err := tun.Open(cfg.TUN.Dev, pki.NodeCert.VpnIP.String(), cfg.TUN.MTU)
 	if err != nil {
-		conn.Close()
+		_ = conn.Close()
 		return nil, fmt.Errorf("interface: tun: %w", err)
 	}
 
 	lh, err := buildLightHouse(cfg, conn)
 	if err != nil {
-		conn.Close()
-		tunDev.Close()
+		_ = conn.Close()
+		_ = tunDev.Close()
 		return nil, fmt.Errorf("interface: lighthouse: %w", err)
 	}
 
@@ -125,8 +125,8 @@ func (iface *Interface) Run(ctx context.Context) {
 	go iface.readFromUDP(ctx)
 
 	<-ctx.Done()
-	iface.tunDev.Close()
-	iface.udpConn.Close()
+	_ = iface.tunDev.Close()
+	_ = iface.udpConn.Close()
 }
 
 func (iface *Interface) readFromTUN(ctx context.Context) {

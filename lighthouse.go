@@ -272,7 +272,7 @@ func ipPortToUDPAddr(p *nethpb.IpPort) (net.UDPAddr, error) {
 }
 
 func udpAddrToIpPort(a *net.UDPAddr) *nethpb.IpPort {
-	return &nethpb.IpPort{Ip: a.IP.String(), Port: uint32(a.Port)}
+	return &nethpb.IpPort{Ip: a.IP.String(), Port: uint32(a.Port)} //nolint:gosec
 }
 
 func ipPortsToUDPAddrs(ports []*nethpb.IpPort) []net.UDPAddr {

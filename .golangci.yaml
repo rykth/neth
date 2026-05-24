@@ -1,21 +1,18 @@
+version: "2"
+
 linters:
-  disable-all: true
+  default: none
   enable:
     - govet
     - staticcheck
     - errcheck
     - gosec
-
-linters-settings:
-  errcheck:
-    check-blank: false
-
-issues:
-  exclude-rules:
-    # Test files: allow unchecked errors in cleanup/helper calls and gosec warnings
-    # on test-only patterns (temp files, random ports, etc.)
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
-    # nolint directives in source are honoured; no extra exclusions needed.
+  settings:
+    errcheck:
+      check-blank: false
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec

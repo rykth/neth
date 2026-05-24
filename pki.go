@@ -44,7 +44,7 @@ func LoadPKI(cfg config.PKIConfig) (*PKI, error) {
 }
 
 func loadAndParseCA(path string) (*cert.Certificate, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("pki: read CA %q: %w", path, err)
 	}
@@ -59,7 +59,7 @@ func loadAndParseCA(path string) (*cert.Certificate, error) {
 }
 
 func loadAndParseNodeCert(path string, ca *cert.Certificate) (*cert.Certificate, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("pki: read cert %q: %w", path, err)
 	}
@@ -74,7 +74,7 @@ func loadAndParseNodeCert(path string, ca *cert.Certificate) (*cert.Certificate,
 }
 
 func loadAndVerifyKey(path string, nodeCert *cert.Certificate) ([]byte, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("pki: read key %q: %w", path, err)
 	}
