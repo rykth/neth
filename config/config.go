@@ -23,9 +23,10 @@ type Config struct {
 // PKIConfig holds file paths for the CA certificate, node certificate, and
 // node private key.
 type PKIConfig struct {
-	CA   string `yaml:"ca"`
-	Cert string `yaml:"cert"`
-	Key  string `yaml:"key"`
+	CA       string `yaml:"ca"`
+	Cert     string `yaml:"cert"`
+	Key      string `yaml:"key"`
+	PeersDir string `yaml:"peers_dir,omitempty"` // directory of peer *.crt files to pre-seed
 }
 
 // ListenConfig controls the UDP socket the daemon binds to.

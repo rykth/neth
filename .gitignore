@@ -16,3 +16,6 @@ coverage.html
 # secrets — never commit real certs or keys
 *.key
 !dist/*.key.example
+
+# vm-lab generated artefacts (disks, ISOs, PKI, logs, PIDs)
+vm-lab/.lab/

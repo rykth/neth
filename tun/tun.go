@@ -126,6 +126,15 @@ func Open(name, cidr string, mtu int) (*Device, error) {
 		return nil, fmt.Errorf("tun: SIOCSIFFLAGS: %w", err)
 	}
 
+	// Switch to loose reverse-path filtering (rp_filter=2) on the TUN.
+	// Overlay traffic injected into the TUN has source IPs routable via
+	// other interfaces. The kernel uses max(all, iface) to determine the
+	// effective rp_filter; setting the per-interface value to 2 (loose)
+	// overrides the common default of 1 (strict) that would silently drop
+	// every decrypted VPN packet.
+	rpPath := fmt.Sprintf("/proc/sys/net/ipv4/conf/%s/rp_filter", devName)
+	_ = os.WriteFile(rpPath, []byte("2"), 0o644) //nolint:gosec
+
 	return &Device{
 		file: os.NewFile(uintptr(fd), devName),
 		name: devName,

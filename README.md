@@ -202,6 +202,7 @@ ping 10.0.0.1
 | `pki` | `ca` | -- | Path to CA certificate (required) |
 | `pki` | `cert` | -- | Path to node certificate (required) |
 | `pki` | `key` | -- | Path to X25519 private key (required) |
+| `pki` | `peers_dir` | `""` | Directory of peer `*.crt` files; pre-seeds the peer certificate cache so this node can initiate handshakes immediately on startup |
 | `listen` | `host` | `0.0.0.0` | UDP bind address |
 | `listen` | `port` | -- | UDP port (required, 1-65535) |
 | `tun` | `dev` | `neth0` | TUN interface name |

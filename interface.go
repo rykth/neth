@@ -9,6 +9,9 @@ import (
 	"log/slog"
 	"net"
 	"net/netip"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -108,7 +111,39 @@ func NewInterface(cfg *config.Config) (*Interface, error) {
 		iface.onHandshakeComplete,
 	)
 
+	if cfg.PKI.PeersDir != "" {
+		if err := iface.loadPeerCerts(cfg.PKI.PeersDir); err != nil {
+			_ = conn.Close()
+			_ = tunDev.Close()
+			return nil, fmt.Errorf("interface: peer certs: %w", err)
+		}
+	}
+
 	return iface, nil
+}
+
+func (iface *Interface) loadPeerCerts(dir string) error {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".crt") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(dir, e.Name())) //nolint:gosec
+		if err != nil {
+			return err
+		}
+		c, err := cert.Parse(data)
+		if err != nil {
+			slog.Warn("skipping invalid peer cert", "file", e.Name(), "err", err)
+			continue
+		}
+		iface.AddPeerCert(c.VpnIP.Addr(), c)
+		slog.Info("loaded peer cert", "peer", c.VpnIP.Addr(), "name", c.Name)
+	}
+	return nil
 }
 
 // Run starts all background goroutines and blocks until ctx is cancelled

@@ -10,7 +10,10 @@ GO_SOURCES := $(shell find . -name '*.go' \
 	-not -path './vendor/*' \
 	-not -name '*.pb.go')
 
-.PHONY: all build nethd neth-cert proto test test-race lint clean help
+VM_LAB := vm-lab
+
+.PHONY: all build nethd neth-cert proto test test-race lint clean help \
+        vm-start vm-stop vm-clean
 
 all: build
 
@@ -18,10 +21,10 @@ all: build
 build: nethd neth-cert
 
 nethd: $(BIN_DIR) $(GO_SOURCES)
-	go build -trimpath -o $(NETHD) ./cmd/nethd
+	CGO_ENABLED=0 go build -trimpath -buildvcs=false -o $(NETHD) ./cmd/nethd
 
 neth-cert: $(BIN_DIR) $(GO_SOURCES)
-	go build -trimpath -o $(NETH_CERT) ./cmd/neth-cert
+	CGO_ENABLED=0 go build -trimpath -buildvcs=false -o $(NETH_CERT) ./cmd/neth-cert
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
@@ -49,6 +52,18 @@ lint:
 ## clean: remove compiled binaries
 clean:
 	rm -rf $(BIN_DIR)
+
+## vm-start: build binaries and boot 3 QEMU VMs (lighthouse + node-a + node-b)
+vm-start: build
+	sudo $(VM_LAB)/start.sh
+
+## vm-stop: gracefully shut down the VMs and remove bridge/TAP devices
+vm-stop:
+	sudo $(VM_LAB)/stop.sh
+
+## vm-clean: shut down VMs and delete overlay disks / cloud-init ISOs
+vm-clean:
+	sudo $(VM_LAB)/stop.sh --clean
 
 ## help: list available targets
 help:
